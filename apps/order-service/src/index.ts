@@ -1,6 +1,8 @@
 import { clerkPlugin, getAuth } from "@clerk/fastify";
 import Fastify from "fastify";
-import { shouldBeUser } from "./middleware/authMiddleware.js";
+import { shouldBeUser } from "./middleware/authMiddleware";
+import { connectOrderDb } from "@repo/order-db";
+import { orderRoute } from "./routes/order";
 
 const fastify = Fastify({ logger: true });
 fastify.register(clerkPlugin);
@@ -20,11 +22,15 @@ fastify.get("/test", { preHandler: shouldBeUser }, (request, reply) => {
   });
 });
 
+fastify.register(orderRoute);
+
 const start = async () => {
   try {
+    await connectOrderDb();
     await fastify.listen({ port: 8001 });
     console.log("Order service is running on port:8001");
   } catch (error) {
+    console.log(error);
     fastify.log.error(error);
   }
 };
